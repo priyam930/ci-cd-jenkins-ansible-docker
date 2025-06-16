@@ -1,16 +1,18 @@
+
 ---
 - name: Deploy Flask App Container
   hosts: web
   become: true
 
   tasks:
-    - name: Install Docker if not present
-      apt:
-        name: docker.io
+    - name: Install required packages
+      yum:
+        name:
+          - docker
         state: present
         update_cache: yes
 
-    - name: Ensure Docker service is running
+    - name: Ensure Docker service is started and enabled
       service:
         name: docker
         state: started
