@@ -1,24 +1,26 @@
-# deploy.yml
-- name: Deploy Docker Container on Remote Server
-  hosts: all
-  become: yes
+---
+- name: Deploy Flask App Container
+  hosts: web
+  become: true
+
   tasks:
-    - name: Stop existing container
-      shell: docker stop myapp || true
+    - name: Install Docker if not present
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
 
-    - name: Remove existing container
-      shell: docker rm myapp || true
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: true
 
-    - name: Remove existing image
-      shell: docker rmi myapp:latest || true
+    - name: Load Docker image from tar
+      shell: docker load < /tmp/myapp.tar
 
-    - name: Copy Docker image from Jenkins to target server
-      copy:
-        src: /tmp/myapp.tar
-        dest: /tmp/myapp.tar
+    - name: Remove old container if exists
+      shell: docker rm -f flaskapp || true
 
-    - name: Load Docker image
-      shell: docker load -i /tmp/myapp.tar
-
-    - name: Run the container
-      shell: docker run -d --name myapp -p 5000:5000 myapp:latest
+    - name: Run the Docker container
+      shell: docker run -d --name flaskapp -p 80:5000 myapp:latest
